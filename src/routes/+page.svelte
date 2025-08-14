@@ -11,7 +11,12 @@
   let progress = $state(0);
 
   let showControls = $state(true);
+  
+  let showMore = $state(false);
 
+  let currentTime = $state(0);
+  let duration = $state(0);
+  
   onMount(() => {
     const params = new URLSearchParams(location.search);
     autoplay = params.get("autoplay");
@@ -25,7 +30,9 @@
 
   const updateProgress = () => {
     if (!videoElement) return 0;
-    return (videoElement.currentTime / videoElement.duration) * 100;
+    currentTime = videoElement.currentTime;
+    duration = videoElement.duration;
+    return (currentTime / duration) * 100;
   }
 
   const controlVideo = () => {
@@ -70,19 +77,22 @@
     height: 100vh;
   }
 
-  controls {
+  controls, more {
     background-color: var(--overlay);
     color: #ffffff;
     backdrop-filter: blur(10rem);
     border-radius: 1rem;
     position: absolute;
-    transform: translateX(-50%);
+    display: flex;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  controls {
     width: 40vw;
     left: 50vw;
     bottom: 1rem;
-    padding: 1rem;
-    display: flex;
-    gap: 1rem;
+    transform: translateX(-50%);
     align-items: center;
     opacity: 0;
     filter: blur(0.2rem);
@@ -93,6 +103,19 @@
     opacity: 1;
     filter: blur(0rem);
     transition: opacity 0.4s linear;
+  }
+  
+  more {
+    width: calc(20vw - 1rem);
+    left: 50vw;
+    bottom: 6rem;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  more.show {
+    opacity: 1;
   }
 
   progressbar {
@@ -123,18 +146,33 @@
     height: 2lh;
     min-width: 2lh;
   }
+
+  more button {
+    text-align: inherit;
+  }
+
+  .time {
+    font-family: monospace;
+  }
 </style>
 
-<svelte:body onmouseleave={() => showControls = videoElement.paused ? true : false} onmouseenter={() => showControls = true} onmousemove={() => showControls = true}></svelte:body>
+<svelte:body onmouseleave={() => showControls = videoElement.paused || showMore ? true : false} onmouseenter={() => showControls = true} onmousemove={() => showControls = true} oncontextmenu={(event) => { event.preventDefault(); showMore = !showMore; showControls = true; }}></svelte:body>
 
-<video src={src} bind:this={videoElement} ontimeupdate={() => { if (progress !== updateProgress()) showControls = false; progress = updateProgress(); }} onended={() => showControls = true} onclick={controlVideo} disablepictureinpicture>
+<video src={src} bind:this={videoElement} onloadeddata={() => duration = videoElement.duration} ontimeupdate={() => { if (progress !== updateProgress() && !showMore) showControls = false; progress = updateProgress(); }} onended={() => showControls = true} onclick={controlVideo} disablepictureinpicture>
   <track kind="captions">
 </video>
 {#if videoElement}
+  <more class:show={showMore} inert={!showMore}>
+    <button onclick={() => videoElement.currentTime = 0}><i class="fa-solid fa-arrow-left"></i> Restart</button>
+    <button onclick={() => videoElement.loop = !videoElement.loop}><i class="fa-solid fa-arrow-rotate-right"></i> Loop ({videoElement.loop ? "on" : "off"})</button>
+  </more>
   <controls class:show={showControls}>
+    <div class="time">{Math.round(currentTime)}</div>
     <progressbar>
       <div style:width={`${progress}%`}></div>
     </progressbar>
-    <button aria-label={videoElement.paused ? videoElement.ended ? "Replay" : "Play" : "Pause"} onclick={controlVideo}><i class="fa-solid fa-{videoElement.paused ? videoElement.ended ? "arrow-rotate-right" : "play" : "pause"}"></i></button>
+    <div class="time">{Math.round(duration)}</div>
+    <button aria-label={videoElement.paused ? videoElement.ended ? "Replay" : "Play" : "Pause"} onclick={controlVideo}><i class="fa-solid fa-{videoElement.paused ? videoElement.ended ? "arrow-rotate-left" : "play" : "pause"}"></i></button>
+    <button aria-label="More options" onclick={() => showMore = !showMore}><i class="fa-solid fa-ellipsis-vertical"></i></button>
   </controls>
 {/if}
