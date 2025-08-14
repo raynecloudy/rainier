@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  // @ts-ignore
+  import { version } from "/package.json";
   type Param = string | null;
   let autoplay: Param = $state(null);
   let src: Param = $state(null);
@@ -154,6 +156,10 @@
   .time {
     font-family: monospace;
   }
+
+  a {
+    color: inherit;
+  }
 </style>
 
 <svelte:body onmouseleave={() => showControls = videoElement.paused || showMore ? true : false} onmouseenter={() => showControls = true} onmousemove={() => showControls = true} oncontextmenu={(event) => { event.preventDefault(); showMore = !showMore; showControls = true; }}></svelte:body>
@@ -165,6 +171,7 @@
   <more class:show={showMore} inert={!showMore}>
     <button onclick={() => videoElement.currentTime = 0}><i class="fa-solid fa-arrow-left"></i> Restart</button>
     <button onclick={() => videoElement.loop = !videoElement.loop}><i class="fa-solid fa-arrow-rotate-right"></i> Loop ({videoElement.loop ? "on" : "off"})</button>
+    <sub><a href="https://github.com/raynecloudy/rainier" target="_top">Rainier</a> v{version}</sub>
   </more>
   <controls class:show={showControls}>
     <div class="time">{Math.round(currentTime)}</div>
