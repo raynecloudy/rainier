@@ -77,7 +77,7 @@
     border-radius: 1rem;
     position: absolute;
     transform: translateX(-50%);
-    width: 45vw;
+    width: 40vw;
     left: 50vw;
     bottom: 1rem;
     padding: 1rem;
@@ -86,14 +86,13 @@
     align-items: center;
     opacity: 0;
     filter: blur(0.2rem);
-    transition: opacity 2s 0.5s linear, filter 2s 0.5s linear, width 0s 2.5s;
+    transition: opacity 2s 0.5s linear, filter 2s 0.5s linear;
   }
   
   controls.show {
     opacity: 1;
     filter: blur(0rem);
-    width: 50vw;
-    transition: opacity 0.4s linear, width 0.4s;
+    transition: opacity 0.4s linear;
   }
 
   progressbar {
