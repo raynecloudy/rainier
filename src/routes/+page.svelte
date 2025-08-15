@@ -52,7 +52,7 @@
   }
 
   :root {
-    --overlay: #2b2b2b23;
+    --overlay: #2b2b2b5e;
     --overlay2: #dddddd36;
   }
 
@@ -86,6 +86,8 @@
     border-radius: 1rem;
     position: absolute;
     display: flex;
+    text-align: center;
+    flex-direction: column;
     padding: 1rem;
     gap: 1rem;
   }
@@ -95,7 +97,6 @@
     left: 50vw;
     bottom: 1rem;
     transform: translateX(-50%);
-    align-items: center;
     opacity: 0;
     filter: blur(0.2rem);
     transition: opacity 2s 0.5s linear, filter 2s 0.5s linear;
@@ -107,11 +108,17 @@
     transition: opacity 0.4s linear;
   }
   
+  controls > div {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    align-items: center;
+  }
+  
   more {
     width: calc(20vw - 1rem);
     left: 50vw;
-    bottom: 6rem;
-    flex-direction: column;
+    bottom: 7rem;
     opacity: 0;
     transition: opacity 0.2s;
   }
@@ -168,18 +175,21 @@
   <track kind="captions">
 </video>
 {#if videoElement}
+  <controls class:show={showControls}>
+    <b>{title ?? "Video"}</b>
+    <div>
+      <button aria-label={videoElement.paused ? videoElement.ended ? "Replay" : "Play" : "Pause"} onclick={controlVideo}><i class="fa-solid fa-{videoElement.paused ? videoElement.ended ? "arrow-rotate-left" : "play" : "pause"}"></i></button>
+      <div class="time">{Math.round(currentTime)}</div>
+      <progressbar>
+        <div style:width={`${progress}%`}></div>
+      </progressbar>
+      <div class="time">{Math.round(duration)}</div>
+      <button aria-label="More options" onclick={() => showMore = !showMore}><i class="fa-solid fa-ellipsis-vertical"></i></button>
+    </div>
+  </controls>
   <more class:show={showMore} inert={!showMore}>
     <button onclick={() => videoElement.currentTime = 0}><i class="fa-solid fa-arrow-left"></i> Restart</button>
     <button onclick={() => videoElement.loop = !videoElement.loop}><i class="fa-solid fa-arrow-rotate-right"></i> Loop ({videoElement.loop ? "on" : "off"})</button>
     <sub><a href="https://github.com/raynecloudy/rainier" target="_top">Rainier</a> v{version}</sub>
   </more>
-  <controls class:show={showControls}>
-    <div class="time">{Math.round(currentTime)}</div>
-    <progressbar>
-      <div style:width={`${progress}%`}></div>
-    </progressbar>
-    <div class="time">{Math.round(duration)}</div>
-    <button aria-label={videoElement.paused ? videoElement.ended ? "Replay" : "Play" : "Pause"} onclick={controlVideo}><i class="fa-solid fa-{videoElement.paused ? videoElement.ended ? "arrow-rotate-left" : "play" : "pause"}"></i></button>
-    <button aria-label="More options" onclick={() => showMore = !showMore}><i class="fa-solid fa-ellipsis-vertical"></i></button>
-  </controls>
 {/if}
