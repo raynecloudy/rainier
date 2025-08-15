@@ -102,7 +102,7 @@
     transition: opacity 2s 0.5s linear, filter 2s 0.5s linear;
   }
   
-  controls.show {
+  controls:is(.show, :has(:focus-visible)) {
     opacity: 1;
     filter: blur(0rem);
     transition: opacity 0.4s linear;
@@ -156,6 +156,11 @@
     min-width: 2lh;
   }
 
+  button:is(:hover, :focus-visible):not(:active) {
+    outline: none;
+    filter: brightness(3);
+  }
+
   more button {
     text-align: inherit;
   }
@@ -190,6 +195,7 @@
   <more class:show={showMore} inert={!showMore}>
     <button onclick={() => videoElement.currentTime = 0}><i class="fa-solid fa-arrow-left"></i> Restart</button>
     <button onclick={() => videoElement.loop = !videoElement.loop}><i class="fa-solid fa-arrow-rotate-right"></i> Loop ({videoElement.loop ? "on" : "off"})</button>
+    <button onclick={() => videoElement.muted = !videoElement.muted}><i class="fa-solid fa-volume-xmark"></i> Mute ({videoElement.muted ? "on" : "off"})</button>
     <sub><a href="https://github.com/raynecloudy/rainier" target="_top">Rainier</a> v{version}</sub>
   </more>
 {/if}
