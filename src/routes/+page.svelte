@@ -2,10 +2,6 @@
   import { onMount } from "svelte";
   // @ts-ignore
   import { version } from "/package.json";
-  type Param = string | null;
-  let autoplay: Param = $state(null);
-  let src: Param = $state(null);
-  let title: Param = $state(null);
 
   // @ts-ignore
   let videoElement: HTMLVideoElement = $state();
@@ -15,27 +11,46 @@
   let showControls = $state(true);
   
   let showMore = $state(false);
-
+  
+  let autoplay = $state(false);
   let currentTime = $state(0);
   let duration = $state(0);
-  
-  onMount(() => {
+  let hideOptions = $state(true);
+  let loop = $state(false);
+  let mute = $state(false);
+  let src: string | null = $state(null);
+  let title = $state("");
+
+  onMount(async () => {
     const params = new URLSearchParams(location.search);
-    autoplay = params.get("autoplay");
-    src = params.get("src");
-    title = params.get("title");
+    autoplay = params.get("autoplay") !== null;
+    currentTime = parseInt(params.get("time") ?? "0");
+    hideOptions = params.get("hideOptions") !== null;
+    loop = params.get("loop") !== null;
+    mute = params.get("mute") !== null;
+    src = params.get("url");
+    title = params.get("title") ?? "Untitled";
+
+    if (!src) return;
+    const res = await fetch(src);
+    if (!res.ok) return;
+    if (res.headers.get("Content-Type") === "application/json") {
+      const data = await res.json();
+      if (data.autoplay) autoplay = data.autoplay;
+      if (data.hideOptions) hideOptions = data.hideOptions;
+      if (data.loop) loop = data.loop;
+      if (data.mute) mute = data.mute;
+      if (data.time) currentTime = data.time;
+      if (data.title) title = data.title;
+      if (data.url) src = data.url;
+    }
 
     if (autoplay) {
       videoElement.play();
     }
   });
 
-  const updateProgress = () => {
-    if (!videoElement) return 0;
-    currentTime = videoElement.currentTime;
-    duration = videoElement.duration;
-    return (currentTime / duration) * 100;
-  }
+  const updateProgress = () => (currentTime / duration) * 100;
 
   const controlVideo = () => {
     if (videoElement.ended) videoElement.currentTime = 0;
@@ -176,12 +191,12 @@
 
 <svelte:body onmouseleave={() => showControls = videoElement.paused || showMore ? true : false} onmouseenter={() => showControls = true} onmousemove={() => showControls = true} oncontextmenu={(event) => { event.preventDefault(); showMore = !showMore; showControls = true; }}></svelte:body>
 
-<video src={src} bind:this={videoElement} onloadeddata={() => duration = videoElement.duration} ontimeupdate={() => { if (progress !== updateProgress() && !showMore) showControls = false; progress = updateProgress(); }} onended={() => showControls = true} onclick={controlVideo} disablepictureinpicture>
+<video src={src} bind:this={videoElement} bind:currentTime={currentTime} bind:duration={duration} bind:muted={mute} loop={loop} ontimeupdate={() => { if (progress !== updateProgress() && !showMore) showControls = false; progress = updateProgress(); }} onended={() => showControls = true} onclick={controlVideo} disablepictureinpicture>
   <track kind="captions">
 </video>
 {#if videoElement}
   <controls class:show={showControls}>
-    <b>{title ?? "Video"}</b>
+    <b>{title}</b>
     <div>
       <button aria-label={videoElement.paused ? videoElement.ended ? "Replay" : "Play" : "Pause"} onclick={controlVideo}><i class="fa-solid fa-{videoElement.paused ? videoElement.ended ? "arrow-rotate-left" : "play" : "pause"}"></i></button>
       <div class="time">{Math.round(currentTime)}</div>
@@ -189,13 +204,17 @@
         <div style:width={`${progress}%`}></div>
       </progressbar>
       <div class="time">{Math.round(duration)}</div>
-      <button aria-label="More options" onclick={() => showMore = !showMore}><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      {#if !hideOptions}
+        <button aria-label="More options" onclick={() => showMore = !showMore}><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      {/if}
     </div>
   </controls>
-  <more class:show={showMore} inert={!showMore}>
-    <button onclick={() => videoElement.currentTime = 0}><i class="fa-solid fa-arrow-left"></i> Restart</button>
-    <button onclick={() => videoElement.loop = !videoElement.loop}><i class="fa-solid fa-arrow-rotate-right"></i> Loop ({videoElement.loop ? "on" : "off"})</button>
-    <button onclick={() => videoElement.muted = !videoElement.muted}><i class="fa-solid fa-volume-xmark"></i> Mute ({videoElement.muted ? "on" : "off"})</button>
-    <sub><a href="https://github.com/raynecloudy/rainier" target="_top">Rainier</a> v{version}</sub>
-  </more>
+  {#if !hideOptions}
+    <more class:show={showMore} inert={!showMore}>
+      <button onclick={() => videoElement.currentTime = 0}><i class="fa-solid fa-arrow-left"></i> Restart</button>
+      <button onclick={() => loop = !loop}><i class="fa-solid fa-arrow-rotate-right"></i> Loop ({loop ? "on" : "off"})</button>
+      <button onclick={() => mute = !mute}><i class="fa-solid fa-volume-xmark"></i> Mute ({mute ? "on" : "off"})</button>
+      <sub><a href="https://github.com/raynecloudy/rainier" target="_top">Rainier</a> v{version}</sub>
+    </more>
+  {/if}
 {/if}
