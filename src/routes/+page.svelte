@@ -9,9 +9,9 @@
   let progress = $state(0);
 
   let showControls = $state(true);
-  
+
   let showMore = $state(false);
-  
+
   let autoplay = $state(false);
   let currentTime = $state(0);
   let duration = $state(0);
@@ -187,6 +187,13 @@
   a {
     color: inherit;
   }
+
+  controls b {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 </style>
 
 <svelte:body onmouseleave={() => showControls = videoElement.paused || showMore ? true : false} onmouseenter={() => showControls = true} onmousemove={() => showControls = true} oncontextmenu={(event) => { event.preventDefault(); showMore = !showMore; showControls = true; }}></svelte:body>
@@ -196,7 +203,7 @@
 </video>
 {#if videoElement}
   <controls class:show={showControls}>
-    <b>{title}</b>
+    <b title={title}>{title}</b>
     <div>
       <button aria-label={videoElement.paused ? videoElement.ended ? "Replay" : "Play" : "Pause"} onclick={controlVideo}><i class="fa-solid fa-{videoElement.paused ? videoElement.ended ? "arrow-rotate-left" : "play" : "pause"}"></i></button>
       <div class="time">{Math.round(currentTime)}</div>
